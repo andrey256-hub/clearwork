@@ -1,0 +1,47 @@
+name: Бэкап базы и утренний пинг
+
+on:
+  schedule:
+    # 03:00 UTC = 06:00 МСК, каждый день — ночной бэкап базы
+    - cron: '0 3 * * *'
+    # 05:30 UTC = 08:30 МСК, ПН–ПТ — будим базу до начала рабочего дня
+    - cron: '30 5 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    name: Ночной бэкап базы
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 3 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Снять дамп базы (pg_dump)
+        env:
+          DATABASE_URL: ${{ secrets.NEON_BACKUP_URL }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::Секрет NEON_BACKUP_URL не задан"; exit 1; }
+          docker run --rm -v "$PWD:/backup" postgres:17 \
+            pg_dump "$DATABASE_URL" \
+            --no-owner --no-privileges --format=custom \
+            -f /backup/clearwork-backup.dump
+          ls -lh clearwork-backup.dump
+
+      - name: Сохранить копию в артефакты (90 дней)
+        uses: actions/upload-artifact@v4
+        with:
+          name: clearwork-backup-${{ github.run_number }}
+          path: clearwork-backup.dump
+          retention-days: 90
+          if-no-files-found: error
+
+  warmup:
+    name: Утренний пинг (будим базу)
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 5 * * 1-5'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Пингуем сайт, чтобы база проснулась к рабочему дню
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --max-time 90 \
+            https://clearwork-xi.vercel.app/login)
+          echo "Ответ сайта: HTTP $code"
+          test "$code" = 200
