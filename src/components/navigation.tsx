@@ -54,7 +54,7 @@ export function Sidebar() {
       </nav>
       <div className="border-t border-border px-5 py-3">
         <p className="text-[11px] text-muted-foreground">
-          ClearWork v1.0 · локальная версия
+          ClearWork v1.0 · облачная версия
         </p>
       </div>
     </aside>
