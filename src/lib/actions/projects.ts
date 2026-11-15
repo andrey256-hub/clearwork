@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
-import { requireAdmin, requireUser } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth'
 import { PROJECT_COLORS } from '@/lib/constants'
 import type { ActionState } from '@/lib/actions/auth'
 
@@ -67,7 +67,7 @@ export async function updateProjectAction(
 
 /** Архивирование/восстановление проекта */
 export async function toggleProjectStatusAction(id: string): Promise<void> {
-  await requireUser()
+  await requireAdmin()
   const project = await db.project.findUnique({ where: { id } })
   if (!project) return
   await db.project.update({

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
-import { requireUser } from '@/lib/auth'
+import { requireAdmin, requireUser } from '@/lib/auth'
 import type { ActionState } from '@/lib/actions/auth'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -12,7 +12,7 @@ export async function createUserAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await requireUser()
+  await requireAdmin()
 
   const name = String(formData.get('name') ?? '').trim()
   const email = String(formData.get('email') ?? '')
@@ -39,7 +39,7 @@ export async function updateUserRoleAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const current = await requireUser()
+  const current = await requireAdmin()
 
   const id = String(formData.get('id') ?? '')
   const role = String(formData.get('role') ?? '') === 'admin' ? 'admin' : 'member'
@@ -67,7 +67,7 @@ export async function resetUserPasswordAction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await requireUser()
+  await requireAdmin()
 
   const id = String(formData.get('id') ?? '')
   const password = String(formData.get('password') ?? '')
