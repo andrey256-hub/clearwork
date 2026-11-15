@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSessionUser } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { withColdStartRetry } from '@/lib/cold-start'
 import { Logo } from '@/components/logo'
 import { LoginForm } from './login-form'
 
@@ -10,7 +11,7 @@ export default async function LoginPage() {
   const user = await getSessionUser()
   if (user) redirect('/')
 
-  const userCount = await db.user.count()
+  const userCount = await withColdStartRetry(() => db.user.count())
   if (userCount === 0) redirect('/register')
 
   return (

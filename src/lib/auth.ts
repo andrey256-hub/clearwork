@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
+import { withColdStartRetry } from '@/lib/cold-start'
 
 export const SESSION_COOKIE = 'cw_session'
 const SESSION_TTL_DAYS = 30
@@ -36,10 +37,12 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const sessionId = cookieStore.get(SESSION_COOKIE)?.value
   if (!sessionId) return null
 
-  const session = await db.session.findUnique({
-    where: { id: sessionId },
-    include: { user: true },
-  })
+  const session = await withColdStartRetry(() =>
+    db.session.findUnique({
+      where: { id: sessionId },
+      include: { user: true },
+    }),
+  )
   if (!session || session.expiresAt < new Date()) return null
 
   const { id, name, email, role } = session.user
