@@ -69,6 +69,11 @@ export function TaskTable({
               const description = htmlToText(task.description)
               const editable = canEditTask(task, currentUser)
               const openable = editable && canEditList
+              const openAssigneeReport =
+                task.assigneeId && task.assigneeName
+                  ? () =>
+                      setReport({ id: task.assigneeId!, name: task.assigneeName! })
+                  : undefined
               return (
                 <tr
                   key={task.id}
@@ -129,17 +134,22 @@ export function TaskTable({
                       {task.projectName}
                     </Badge>
                   </td>
-                  <td className="hidden px-2 py-2.5 text-[13px] md:table-cell">
+                  <td
+                    className={cn(
+                      'hidden px-2 py-2.5 text-[13px] md:table-cell',
+                      openAssigneeReport && 'cursor-pointer',
+                    )}
+                    onClick={openAssigneeReport}
+                    title={
+                      openAssigneeReport
+                        ? `Отчёт: ${task.assigneeName}`
+                        : undefined
+                    }
+                  >
                     {task.assigneeId && task.assigneeName ? (
                       <button
                         type="button"
-                        onClick={() =>
-                          setReport({
-                            id: task.assigneeId!,
-                            name: task.assigneeName!,
-                          })
-                        }
-                        className="cursor-pointer text-primary hover:underline"
+                        className="text-primary hover:underline"
                         title={`Отчёт: ${task.assigneeName}`}
                       >
                         {task.assigneeName}

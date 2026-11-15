@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import type { ReportRow } from '@/lib/report'
+import { PersonReportDialog } from '@/components/person-report-dialog'
 import { cn } from '@/lib/utils'
 
 type SortKey = 'name' | 'total' | 'todo' | 'inProgress' | 'done' | 'share'
@@ -25,22 +26,23 @@ const COLUMNS: Column[] = [
 
 /**
  * Таблица отчёта с сортировкой по столбцам (клик по заголовку).
- * Если передан userHrefBase — имя сотрудника кликабельно и открывает
- * его отчёт (для администратора и для просмотра своих задач).
+ * Клик по строке участника — по имени или любому другому месту строки —
+ * открывает всплывающий отчёт этого человека.
  */
 export function ReportsTable({
   rows,
   total,
-  userHrefBase,
 }: {
   rows: ReportRow[]
   total: number
-  userHrefBase?: string
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({
     key: 'total',
     dir: 'desc',
   })
+  const [report, setReport] = useState<{ id: string; name: string } | null>(
+    null,
+  )
 
   const sorted = useMemo(() => {
     const copy = [...rows]
@@ -109,29 +111,44 @@ export function ReportsTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {sorted.map((row) => (
-            <tr key={row.key} className="hover:bg-muted/50">
-              <td className="max-w-56 px-4 py-2.5">
-                <span className="flex items-center gap-2">
-                  {row.color && (
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: row.color }}
-                    />
-                  )}
-                  {userHrefBase && row.userId ? (
-                    <a
-                      href={`${userHrefBase}${row.userId}`}
-                      className="truncate font-medium text-primary hover:underline"
-                      title={`Показать отчёт: ${row.name}`}
-                    >
-                      {row.name}
-                    </a>
-                  ) : (
-                    <span className="truncate font-medium">{row.name}</span>
-                  )}
-                </span>
-              </td>
+          {sorted.map((row) => {
+            const personId = row.userId
+            return (
+              <tr
+                key={row.key}
+                className={cn('hover:bg-muted/50', personId && 'cursor-pointer')}
+                onClick={
+                  personId
+                    ? () => setReport({ id: personId, name: row.name })
+                    : undefined
+                }
+                title={personId ? `Отчёт: ${row.name}` : undefined}
+              >
+                <td className="max-w-56 px-4 py-2.5">
+                  <span className="flex items-center gap-2">
+                    {row.color && (
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: row.color }}
+                      />
+                    )}
+                    {personId ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setReport({ id: personId, name: row.name })
+                        }}
+                        className="truncate font-medium text-primary hover:underline"
+                        title={`Отчёт: ${row.name}`}
+                      >
+                        {row.name}
+                      </button>
+                    ) : (
+                      <span className="truncate font-medium">{row.name}</span>
+                    )}
+                  </span>
+                </td>
               <td className="px-4 py-2.5 text-right font-medium tabular-nums">
                 {row.total}
               </td>
@@ -159,8 +176,9 @@ export function ReportsTable({
                   />
                 </div>
               </td>
-            </tr>
-          ))}
+              </tr>
+            )
+          })}
           <tr className="border-t-2 border-border bg-muted/50 font-semibold">
             <td className="px-4 py-2.5">Итого</td>
             <td className="px-4 py-2.5 text-right tabular-nums">{total}</td>
@@ -178,6 +196,15 @@ export function ReportsTable({
           </tr>
         </tbody>
       </table>
+
+      {report && (
+        <PersonReportDialog
+          key={report.id}
+          personId={report.id}
+          personName={report.name}
+          onClose={() => setReport(null)}
+        />
+      )}
     </div>
   )
 }

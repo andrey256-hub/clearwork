@@ -129,9 +129,6 @@ export default async function ReportsPage({
     ...(assigneeFilterId ? { assignee: assigneeFilterId } : {}),
   })}`
 
-  // Клик по сотруднику в таблице → его отчёт
-  const personBase = `/reports?${new URLSearchParams({ from, to, group }).toString()}&assignee=`
-
   const periodLabel =
     from === '2000-01-01' && to === '2099-12-31'
       ? 'за всё время'
@@ -306,11 +303,7 @@ export default async function ReportsPage({
               Нет данных за выбранный период
             </p>
           ) : (
-            <ReportsTable
-              rows={rows}
-              total={total}
-              userHrefBase={group === 'user' ? personBase : undefined}
-            />
+            <ReportsTable rows={rows} total={total} />
           )}
         </CardContent>
       </Card>
