@@ -89,12 +89,14 @@ export function TaskTable({
                       : undefined
                   }
                 >
-                  <td
-                    className="px-4 py-2.5"
-                    onClick={editable ? (e) => e.stopPropagation() : undefined}
-                  >
+                  <td className="px-4 py-2.5">
                     {editable ? (
-                      <TaskStatusSelect taskId={task.id} value={task.status} />
+                      <span
+                        className="inline-flex"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <TaskStatusSelect taskId={task.id} value={task.status} />
+                      </span>
                     ) : (
                       <Badge className={TASK_STATUS_META[task.status].badge}>
                         {TASK_STATUS_META[task.status].label}
