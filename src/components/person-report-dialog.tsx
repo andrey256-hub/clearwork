@@ -5,11 +5,12 @@ import { BarChart3, ExternalLink } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 import { Badge } from '@/components/ui/badge'
 import { TASK_STATUS_META, isTaskStatus } from '@/lib/constants'
-import { cn } from '@/lib/utils'
+import { cn, htmlToMultilineText } from '@/lib/utils'
 
 type PersonTask = {
   id: string
   title: string
+  description: string
   status: string
   dueDate: string | null
   createdAt: string
@@ -116,34 +117,42 @@ export function PersonReportDialog({
             {data.tasks.map((t) => {
               const status = isTaskStatus(t.status) ? t.status : 'todo'
               const meta = TASK_STATUS_META[status]
+              const reportText = htmlToMultilineText(t.description)
               return (
-                <li
-                  key={t.id}
-                  className="flex flex-wrap items-center gap-2 px-3.5 py-2.5"
-                >
-                  <span className="w-32 shrink-0 text-xs tabular-nums text-muted-foreground">
-                    {fmtDateTime(t.createdAt)}
-                  </span>
-                  <span
-                    className={cn(
-                      'min-w-0 flex-1 truncate text-sm font-medium',
-                      status === 'done' && 'text-muted-foreground line-through',
-                    )}
-                    title={t.title}
-                  >
-                    {t.title}
-                  </span>
-                  <Badge className={meta.badge}>
-                    <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
-                    {meta.label}
-                  </Badge>
-                  <span className="hidden shrink-0 items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+                <li key={t.id} className="px-3.5 py-2.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="w-32 shrink-0 text-xs tabular-nums text-muted-foreground">
+                      {fmtDateTime(t.createdAt)}
+                    </span>
                     <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: t.projectColor }}
-                    />
-                    {t.projectName}
-                  </span>
+                      className={cn(
+                        'min-w-0 flex-1 truncate text-sm font-medium',
+                        status === 'done' &&
+                          'text-muted-foreground line-through',
+                      )}
+                      title={t.title}
+                    >
+                      {t.title}
+                    </span>
+                    <Badge className={meta.badge}>
+                      <span
+                        className={cn('h-1.5 w-1.5 rounded-full', meta.dot)}
+                      />
+                      {meta.label}
+                    </Badge>
+                    <span className="hidden shrink-0 items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: t.projectColor }}
+                      />
+                      {t.projectName}
+                    </span>
+                  </div>
+                  {reportText && (
+                    <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">
+                      {reportText}
+                    </p>
+                  )}
                 </li>
               )
             })}

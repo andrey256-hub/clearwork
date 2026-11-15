@@ -19,8 +19,9 @@ type CurrentUser = { id: string; role: string }
 
 /**
  * Таблица задач для списков (главная, раздел «Задачи»).
- * Редактирование доступно только владельцу задачи (см. canEditTask) —
- * чужие задачи открываются только на просмотр через раздел «Задачи».
+ * Редактирование доступно только владельцу задачи (см. canEditTask).
+ * Клик по строке (кроме названия своей задачи и селекта статуса)
+ * открывает всплывающий отчёт исполнителя.
  */
 export function TaskTable({
   tasks,
@@ -77,9 +78,21 @@ export function TaskTable({
               return (
                 <tr
                   key={task.id}
-                  className="group transition-colors hover:bg-muted/50"
+                  className={cn(
+                    'group transition-colors hover:bg-muted/50',
+                    openAssigneeReport && 'cursor-pointer',
+                  )}
+                  onClick={openAssigneeReport}
+                  title={
+                    openAssigneeReport
+                      ? `Отчёт: ${task.assigneeName}`
+                      : undefined
+                  }
                 >
-                  <td className="px-4 py-2.5">
+                  <td
+                    className="px-4 py-2.5"
+                    onClick={editable ? (e) => e.stopPropagation() : undefined}
+                  >
                     {editable ? (
                       <TaskStatusSelect taskId={task.id} value={task.status} />
                     ) : (
@@ -91,12 +104,19 @@ export function TaskTable({
                   <td className="max-w-0 px-2 py-2.5">
                     <button
                       type="button"
-                      disabled={!openable}
-                      onClick={() => openable && setEditing(task)}
+                      onClick={(e) => {
+                        // Своя задача — открыть на редактирование;
+                        // чужая — клик уходит на строку и открывает отчёт исполнителя
+                        if (!openable) return
+                        e.stopPropagation()
+                        setEditing(task)
+                      }}
                       title={
-                        editable ? undefined : 'Чужая задача — просмотр недоступен'
+                        editable
+                          ? 'Открыть задачу'
+                          : 'Чужая задача — клик откроет отчёт исполнителя'
                       }
-                      className="block w-full max-w-full text-left disabled:cursor-default"
+                      className="block w-full max-w-full text-left"
                     >
                       <span className="flex items-center gap-2">
                         <span
@@ -134,18 +154,7 @@ export function TaskTable({
                       {task.projectName}
                     </Badge>
                   </td>
-                  <td
-                    className={cn(
-                      'hidden px-2 py-2.5 text-[13px] md:table-cell',
-                      openAssigneeReport && 'cursor-pointer',
-                    )}
-                    onClick={openAssigneeReport}
-                    title={
-                      openAssigneeReport
-                        ? `Отчёт: ${task.assigneeName}`
-                        : undefined
-                    }
-                  >
+                  <td className="hidden px-2 py-2.5 text-[13px] md:table-cell">
                     {task.assigneeId && task.assigneeName ? (
                       <button
                         type="button"

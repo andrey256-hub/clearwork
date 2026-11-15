@@ -18,6 +18,26 @@ export function htmlToText(html: string): string {
     .trim()
 }
 
+/** HTML описания задачи → многострочный текст для просмотра отчёта */
+export function htmlToMultilineText(html: string): string {
+  if (!html) return ''
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|li|h[1-6]|div|blockquote)>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n')
+}
+
 function pad(n: number): string {
   return String(n).padStart(2, '0')
 }
