@@ -4,8 +4,10 @@ on:
   schedule:
     # 03:00 UTC = 06:00 МСК, каждый день — ночной бэкап базы
     - cron: '0 3 * * *'
-    # 05:30 UTC = 08:30 МСК, ПН–ПТ — будим базу до начала рабочего дня
-    - cron: '30 5 * * 1-5'
+    # UTC 05-06 ч = 08:00-09:56 МСК, ПН-ПТ, каждые 4 минуты — серия пингов:
+    # будим базу до прихода первого сотрудника и не даём заснуть снова,
+    # пока люди не начнут работать (дальше их активность держит базу сама)
+    - cron: '*/4 5-6 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -34,14 +36,14 @@ jobs:
           if-no-files-found: error
 
   warmup:
-    name: Утренний пинг (будим базу)
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 5 * * 1-5'
+    name: Утренняя серия пингов (будим базу)
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/4 5-6 * * 1-5'
     runs-on: ubuntu-latest
     steps:
-      - name: Пингуем сайт, чтобы база проснулась к рабочему дню
+      - name: Пингуем проверку живости, чтобы база проснулась
         run: |
           code=$(curl -sS -o /dev/null -w '%{http_code}' \
             --retry 3 --retry-delay 10 --max-time 90 \
-            https://clearwork-xi.vercel.app/login)
+            https://clearwork-xi.vercel.app/api/health)
           echo "Ответ сайта: HTTP $code"
           test "$code" = 200

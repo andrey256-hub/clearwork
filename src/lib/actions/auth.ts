@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import { createSession, destroySession } from '@/lib/auth'
+import { withColdStartRetry } from '@/lib/cold-start'
 
 export type ActionState = { error?: string; ok?: boolean } | null
 
@@ -23,7 +24,13 @@ export async function loginAction(
   }
 
   const user = await db.user.findUnique({ where: { email } })
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+  if (!user) {
+    // Система ещё не настроена (первый запуск) — отправляем создать первый аккаунт
+    const userCount = await withColdStartRetry(() => db.user.count())
+    if (userCount === 0) redirect('/register')
+    return { error: 'Неверный email или пароль' }
+  }
+  if (!(await bcrypt.compare(password, user.passwordHash))) {
     return { error: 'Неверный email или пароль' }
   }
 
