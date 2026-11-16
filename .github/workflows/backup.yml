@@ -44,6 +44,6 @@ jobs:
         run: |
           code=$(curl -sS -o /dev/null -w '%{http_code}' \
             --retry 3 --retry-delay 10 --max-time 90 \
-            https://clearwork-xi.vercel.app/api/health)
+            https://www.clear-work.ru/api/health)
           echo "Ответ сайта: HTTP $code"
           test "$code" = 200
