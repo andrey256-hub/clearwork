@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: Пингуем проверку живости, чтобы база проснулась
         run: |
-          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+          code=$(curl -sS -L -o /dev/null -w '%{http_code}' \
             --retry 3 --retry-delay 10 --max-time 90 \
             https://www.clear-work.ru/api/health)
           echo "Ответ сайта: HTTP $code"
